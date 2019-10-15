@@ -139,6 +139,64 @@ func (g *Graph) dfs(index int) {
 	g.color[index] = -1
 }
 
+// ForeachDAG 如果是DAG，则遍历图。
+// 1. 输出入度为0点顶点
+// 2. 删除入度为0点顶点的边
+// 3. 执行1
+func (g *Graph) ForeachDAG() []string {
+	if !g.IsDAG() {
+		return nil
+	}
+	verticeNum := g.VerticeNum
+	edge := g.cloneEdge()
+
+	color := make([]int, verticeNum)
+	restVertex := 10
+	result := make([]string, 0, verticeNum)
+	for restVertex >= 0 {
+		removeVertex := make([]int, 0, verticeNum)
+		for i := 0; i < verticeNum; i++ {
+			// 该顶点已经遍历过
+			if color[i] == -1 {
+				continue
+			}
+			counter := 0
+			for j := 0; j < verticeNum; j++ {
+				counter += edge[j][i]
+			}
+			// 没有哪个顶点可到达该顶点
+			if counter == 0 {
+				color[i] = -1
+				removeVertex = append(removeVertex, i)
+			}
+		}
+		// 移除该顶点出发的边
+		for i := 0; i < len(removeVertex); i++ {
+			index := removeVertex[i]
+			for j := 0; j < verticeNum; j++ {
+				edge[index][j] = 0
+			}
+
+			result = append(result, g.Vertex[index])
+			restVertex--
+		}
+	}
+	return result
+}
+
+func (g *Graph) cloneEdge() [][]int {
+	capacity := cap(g.Vertex)
+	edge := make([][]int, capacity)
+	for i := 0; i < capacity; i++ {
+		edge[i] = make([]int, capacity)
+		// 复制
+		for j := 0; j < capacity; j++ {
+			edge[i][j] = g.Edge[i][j]
+		}
+	}
+	return edge
+}
+
 // NewGraph 创建图
 func NewGraph() *Graph {
 	edge := make([][]int, InitVertexNum)
